@@ -1,6 +1,7 @@
 import { app, BrowserWindow, shell, ipcMain } from 'electron'
 import { release } from 'node:os'
 import { join } from 'node:path'
+import {printPDF} from "./printPDF";
 
 // The built directory structure
 //
@@ -116,7 +117,7 @@ ipcMain.handle('open-win', (_, arg) => {
 })
 
 app.on('ready',async ()=>{
-  ipcMain.on("windows", function(event, data) {
+  ipcMain.on("windows", async function(event, data) {
     const {command,value} = JSON.parse(data)
     switch (command) {
       case "child_call_parent":
@@ -125,7 +126,10 @@ app.on('ready',async ()=>{
         break;
       case 'PAGE_URL_LIST':
         event.returnValue = "OK";
-        win.webContents.send('PAGE_URL_LIST'.toLowerCase(), {a:1});
+        const urlList = ['https://mp.weixin.qq.com/s?__biz=Mzg2NDEyNjk2Mw==&mid=2247485030&idx=2&sn=923c3bbd524adce98e2d1654a05c47e2&chksm=ce6f54faf918ddecdb8cc372d97e1cc2ae5762a7657393377afea4c3473dec99054616be767f&scene=21#wechat_redirect']
+        const pdf_list = await printPDF(urlList)
+        console.log(pdf_list,999)
+        win.webContents.send('PAGE_URL_LIST'.toLowerCase(), pdf_list);
         break;
       default:
         event.returnValue = 'OK'
