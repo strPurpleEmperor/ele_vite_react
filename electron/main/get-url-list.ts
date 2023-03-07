@@ -1,11 +1,14 @@
-import puppeteer from "puppeteer";
-
-import { getChromePath } from "./tools";
+import electron from "electron";
+import puppeteer from "puppeteer-core";
 
 export async function getUrlList(url: string) {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   const browser = await puppeteer.launch({
     headless: true,
-    executablePath: getChromePath(),
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    executablePath: electron,
   });
   const page = await browser.newPage();
   await page.goto(url, { waitUntil: ["networkidle0"] });
@@ -16,7 +19,6 @@ export async function getUrlList(url: string) {
     });
     return res;
   });
-  console.log(url_list);
   await browser.close();
   return url_list;
 }
