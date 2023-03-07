@@ -2,6 +2,7 @@ import { app, BrowserWindow, shell, ipcMain } from 'electron'
 import { release } from 'node:os'
 import { join } from 'node:path'
 import {printPDF} from "./printPDF";
+import {getUrlList} from "./get-url-list";
 
 // The built directory structure
 //
@@ -53,14 +54,16 @@ async function createWindow() {
       nodeIntegration: true,
       contextIsolation: false,
     },
+    width: 1366,
+    height: 800
   })
 
   if (process.env.VITE_DEV_SERVER_URL) { // electron-vite-vue#298
-    win.loadURL(url)
+    await win.loadURL(url)
     // Open devTool if the app is not packaged
     win.webContents.openDevTools()
   } else {
-    win.loadFile(indexHtml)
+    await win.loadFile(indexHtml)
   }
 
   // Test actively push message to the Electron-Renderer
@@ -90,29 +93,30 @@ app.on('second-instance', () => {
   }
 })
 
-app.on('activate', () => {
+app.on('activate', async () => {
   const allWindows = BrowserWindow.getAllWindows()
   if (allWindows.length) {
     allWindows[0].focus()
   } else {
-    createWindow()
+    await createWindow()
   }
 })
-
+app.commandLine.appendSwitch("disable-site-isolation-trials");
 // New window example arg: new windows url
-ipcMain.handle('open-win', (_, arg) => {
+ipcMain.handle('open-win', async (_, arg) => {
   const childWindow = new BrowserWindow({
     webPreferences: {
       preload,
       nodeIntegration: true,
       contextIsolation: false,
+      webSecurity: false//是否禁用同源策略
     },
   })
 
   if (process.env.VITE_DEV_SERVER_URL) {
-    childWindow.loadURL(`${url}#${arg}`)
+    await childWindow.loadURL(`${url}#${arg}`)
   } else {
-    childWindow.loadFile(indexHtml, { hash: arg })
+    await childWindow.loadFile(indexHtml, { hash: arg })
   }
 })
 
@@ -126,10 +130,19 @@ app.on('ready',async ()=>{
         break;
       case 'PAGE_URL_LIST':
         event.returnValue = "OK";
-        const urlList = ['https://mp.weixin.qq.com/s?__biz=Mzg2NDEyNjk2Mw==&mid=2247485030&idx=2&sn=923c3bbd524adce98e2d1654a05c47e2&chksm=ce6f54faf918ddecdb8cc372d97e1cc2ae5762a7657393377afea4c3473dec99054616be767f&scene=21#wechat_redirect']
-        const pdf_list = await printPDF(urlList)
-        console.log(pdf_list,999)
-        win.webContents.send('PAGE_URL_LIST'.toLowerCase(), pdf_list);
+        const arr = JSON.parse(value)
+        // const arr =['https://mp.weixin.qq.com/s?__biz=Mzg2NDEyNjk2Mw==&mid=2247483786&idx=2&sn=1f10419a9abc97a90954603cdd3ba04b&chksm=ce6f5316f918da00d83f22978075257bfe6cc57299d64eac557f34654a0d1d66319bb6a541bf&scene=21#wechat_redirect']
+        let i = 0
+        while ( i < arr.length){
+          const pdf = await printPDF(arr[i])
+          win.webContents.send('PAGE_URL_LIST'.toLowerCase(), {pdf,isNew:i===0,isFinish:i===arr.length-1})
+          i++
+        }
+        break;
+      case 'GET_URL_LIST':
+        event.returnValue = "OK";
+        const url_list = await getUrlList(value)
+        win.webContents.send('GET_URL_LIST'.toLowerCase(), url_list);
         break;
       default:
         event.returnValue = 'OK'
@@ -137,3 +150,6 @@ app.on('ready',async ()=>{
     }
   })
 })
+
+
+
