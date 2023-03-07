@@ -3,8 +3,6 @@ import puppeteer from "puppeteer";
 import { getChromePath } from "./tools";
 
 export async function getUrlList(url: string) {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
   const browser = await puppeteer.launch({
     headless: true,
     executablePath: getChromePath(),
