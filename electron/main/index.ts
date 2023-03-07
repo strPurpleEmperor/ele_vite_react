@@ -4,16 +4,6 @@ import { join } from 'node:path'
 import {printPDF} from "./printPDF";
 import {getUrlList} from "./get-url-list";
 
-// The built directory structure
-//
-// ├─┬ dist-electron
-// │ ├─┬ main
-// │ │ └── index.js    > Electron-Main
-// │ └─┬ preload
-// │   └── index.js    > Preload-Scripts
-// ├─┬ dist
-// │ └── index.html    > Electron-Renderer
-//
 process.env.DIST_ELECTRON = join(__dirname, '../')
 process.env.DIST = join(process.env.DIST_ELECTRON, '../dist')
 process.env.PUBLIC = process.env.VITE_DEV_SERVER_URL
@@ -41,7 +31,20 @@ let win: BrowserWindow | null = null
 const preload = join(__dirname, '../preload/index.js')
 const url = process.env.VITE_DEV_SERVER_URL
 const indexHtml = join(process.env.DIST, 'index.html')
-
+let page_URL_list:string[] = []
+let isPause = false
+async function sendPDF(urlList:string[],isNew:boolean) {
+  const url = urlList.shift()
+  const pdf = await printPDF(url)
+  if (isPause){
+    urlList.unshift(url)
+  } else {
+    win.webContents.send('PAGE_URL_LIST'.toLowerCase(), {pdf,isNew,isFinish:page_URL_list.length===0})
+  }
+  if (urlList.length && !isPause){
+    await sendPDF(urlList, false)
+  }
+}
 async function createWindow() {
   win = new BrowserWindow({
     title: 'Main window',
@@ -130,19 +133,25 @@ app.on('ready',async ()=>{
         break;
       case 'PAGE_URL_LIST':
         event.returnValue = "OK";
-        const arr = JSON.parse(value)
-        // const arr =['https://mp.weixin.qq.com/s?__biz=Mzg2NDEyNjk2Mw==&mid=2247483786&idx=2&sn=1f10419a9abc97a90954603cdd3ba04b&chksm=ce6f5316f918da00d83f22978075257bfe6cc57299d64eac557f34654a0d1d66319bb6a541bf&scene=21#wechat_redirect']
-        let i = 0
-        while ( i < arr.length){
-          const pdf = await printPDF(arr[i])
-          win.webContents.send('PAGE_URL_LIST'.toLowerCase(), {pdf,isNew:i===0,isFinish:i===arr.length-1})
-          i++
-        }
+        page_URL_list = JSON.parse(value)
+        isPause = false
+        await sendPDF(page_URL_list,true)
         break;
       case 'GET_URL_LIST':
         event.returnValue = "OK";
         const url_list = await getUrlList(value)
         win.webContents.send('GET_URL_LIST'.toLowerCase(), url_list);
+        break;
+      case 'PAUSE_GET_PDF':
+        event.returnValue = "OK";
+        isPause = true
+        win.webContents.send('PAUSE_GET_PDF'.toLowerCase(), true);
+        break;
+      case 'CONTINUE_GET_PDF':
+        event.returnValue = "OK";
+        win.webContents.send('CONTINUE_GET_PDF'.toLowerCase(), true);
+        isPause = false
+        await sendPDF(page_URL_list,false)
         break;
       default:
         event.returnValue = 'OK'

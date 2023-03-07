@@ -19,9 +19,13 @@ function App() {
   useEffect(()=>{
     ipcRenderer.on('PAGE_URL_LIST'.toLowerCase(), msgHandler)
     ipcRenderer.on('GET_URL_LIST'.toLowerCase(), urlListHandler)
+    ipcRenderer.on('PAUSE_GET_PDF'.toLowerCase(), pauseHandler)
+    ipcRenderer.on('CONTINUE_GET_PDF'.toLowerCase(), contHandler)
     return () => {
       ipcRenderer.off('PAGE_URL_LIST'.toLowerCase(),msgHandler)
       ipcRenderer.off('GET_URL_LIST'.toLowerCase(),urlListHandler)
+      ipcRenderer.off('PAUSE_GET_PDF'.toLowerCase(),pauseHandler)
+      ipcRenderer.off('CONTINUE_GET_PDF'.toLowerCase(),contHandler)
     }
   },[pdfList,loading,urlList])
   function msgHandler(_:any, data: {isFinish:boolean,isNew:boolean,pdf:PDFTYPE}) {
@@ -39,6 +43,16 @@ function App() {
   function urlListHandler(_:any,data:string[]) {
     setUrlList(data.filter((d:string)=>/^http/.test(d)))
     setLoading(false)
+  }
+  function pauseHandler(_:any,data:boolean) {
+    if (data){
+      setSN(false)
+    }
+  }
+  function contHandler(_:any,data:boolean) {
+    if (data){
+      setSN(true)
+    }
   }
   function sendMsg(command:string,value:string) {
     ipcRenderer.sendSync('windows', JSON.stringify({
@@ -58,6 +72,7 @@ function App() {
   }
   function getURL(url:string) {
     sendMsg('GET_URL_LIST', url)
+    setLoading(true)
   }
   
   function saveURL() {
@@ -92,6 +107,12 @@ function App() {
       .catch((res) => {
       })
   }
+  function toPause() {
+    sendMsg('PAUSE_GET_PDF','')
+  }
+  function toContinue() {
+    sendMsg('CONTINUE_GET_PDF','')
+  }
   return (
     <Spin spinning={loading}>
       <Tabs type="card" items={[
@@ -121,7 +142,10 @@ function App() {
                   <Button type='primary'>点击上传</Button>
                 </Upload>
                 <div style={{display:"flex",justifyContent:'space-between'}}>
-                    <Spin spinning={sn}/>
+                    <div>
+                      <Spin spinning={sn}/>
+                      {pdfList.length > 0 &&(sn?<Button onClick={toPause}>暂停</Button>:<Button onClick={toContinue}>继续</Button>)}
+                    </div>
                     {!sn&&<div/>}
                     <Button disabled={sn || !pdfList.length} onClick={saveAllPDF}>保存全部</Button>
                 </div>
