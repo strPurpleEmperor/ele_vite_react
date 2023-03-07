@@ -1,6 +1,6 @@
-import electron from "electron";
-import puppeteer from "puppeteer-core";
+import puppeteer from "puppeteer";
 
+import { getChromePath } from "./tools";
 export function sleep() {
   return new Promise((resolve) => {
     setTimeout(resolve, 3000);
@@ -9,9 +9,7 @@ export function sleep() {
 export async function printPDF(url: string) {
   const browser = await puppeteer.launch({
     headless: true,
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    executablePath: electron,
+    executablePath: getChromePath(),
     defaultViewport: { width: 595 * 2, height: 842 * 2 },
   });
   const page = await browser.newPage();
