@@ -1,3 +1,3 @@
 export function getChromePath() {
-    return void 0
+  return void 0;
 }
