@@ -1,5 +1,6 @@
 import "./App.scss";
 
+import { CaretRightOutlined, PauseOutlined } from "@ant-design/icons";
 import { Button, Image, Input, Space, Spin, Table, Tabs, Upload } from "antd";
 import { ipcRenderer } from "electron";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -18,6 +19,7 @@ function App() {
   const [urlList, setUrlList] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [sn, setSN] = useState(false);
+  const [isPause, setIsPause] = useState(false);
   const [pdfList, setPdfList] = useState<PDFTYPE[]>([]);
   useEffect(() => {
     ipcRenderer.on("PAGE_URL_LIST".toLowerCase(), msgHandler);
@@ -52,12 +54,12 @@ function App() {
   }
   function pauseHandler(_: any, data: boolean) {
     if (data) {
-      setSN(false);
+      setIsPause(true);
     }
   }
   function contHandler(_: any, data: boolean) {
     if (data) {
-      setSN(true);
+      setIsPause(false);
     }
   }
   function sendMsg(command: string, value: string) {
@@ -161,14 +163,34 @@ function App() {
                   <Button type="primary">点击上传</Button>
                 </Upload>
                 <div
-                  style={{ display: "flex", justifyContent: "space-between" }}
+                  style={{
+                    marginTop: 20,
+                    display: "flex",
+                    justifyContent: "space-between",
+                  }}
                 >
-                  <div>
+                  <div style={{ display: "flex", alignItems: "center" }}>
                     <Spin spinning={sn} />
-                    {sn ? (
-                      <Button onClick={toPause}>暂停</Button>
-                    ) : (
-                      <Button onClick={toContinue}>继续</Button>
+                    {sn && (
+                      <div style={{ marginLeft: 20 }}>
+                        {isPause ? (
+                          <Button
+                            icon={<CaretRightOutlined />}
+                            type="primary"
+                            onClick={toContinue}
+                          >
+                            继续
+                          </Button>
+                        ) : (
+                          <Button
+                            icon={<PauseOutlined />}
+                            danger
+                            onClick={toPause}
+                          >
+                            暂停
+                          </Button>
+                        )}
+                      </div>
                     )}
                   </div>
                   {!sn && <div />}
@@ -177,7 +199,7 @@ function App() {
                   </Button>
                 </div>
                 <Table
-                  style={{ marginTop: 20 }}
+                  style={{ marginTop: 10 }}
                   pagination={false}
                   rowKey={(item) => item.title + Math.random()}
                   dataSource={pdfList}
