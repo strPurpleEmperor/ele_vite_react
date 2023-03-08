@@ -1,14 +1,27 @@
 import "./App.scss";
 
 import { CaretRightOutlined, PauseOutlined } from "@ant-design/icons";
-import { Button, Image, Input, Space, Spin, Table, Tabs, Upload } from "antd";
+import {
+  Button,
+  Image,
+  Input,
+  Layout,
+  Menu,
+  Space,
+  Spin,
+  Table,
+  Tabs,
+  Upload,
+} from "antd";
 import { ipcRenderer } from "electron";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import FileSaver from "file-saver";
 import JSZip from "jszip";
 import { useEffect, useState } from "react";
+import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
 
+import { router } from "@/router";
 import { buffer2Url } from "@/tools";
 interface PDFTYPE {
   title: string;
@@ -126,7 +139,7 @@ function App() {
   function toContinue() {
     sendMsg("CONTINUE_GET_PDF", "");
   }
-  return (
+  /*return (
     <Spin spinning={loading}>
       <Tabs
         type="card"
@@ -241,10 +254,35 @@ function App() {
                 />
               </div>
             ),
+          // eslint-disable-next-line max-lines
           },
         ]}
       ></Tabs>
     </Spin>
+  );*/
+  return (
+    <Layout>
+      <Layout.Sider>
+        <Menu
+          defaultSelectedKeys={["0"]}
+          items={router.map((r, index) => ({
+            title: r.name,
+            key: index.toString(),
+            label: <Link to={r.path}>{r.name}</Link>,
+          }))}
+          mode="inline"
+        ></Menu>
+      </Layout.Sider>
+      <Layout.Content>
+        <BrowserRouter>
+          <Routes>
+            {router.map((r) => (
+              <Route key={r.path} path={r.path} element={r.element} />
+            ))}
+          </Routes>
+        </BrowserRouter>
+      </Layout.Content>
+    </Layout>
   );
 }
 

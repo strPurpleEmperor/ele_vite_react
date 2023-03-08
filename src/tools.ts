@@ -1,3 +1,5 @@
+import { ipcRenderer } from "electron";
+
 export function download(url = "", fileName = "未知文件") {
   const a = document.createElement("a");
   a.style.display = "none";
@@ -23,5 +25,15 @@ export function buffer2Url(buffer: Uint8Array) {
         return res + String.fromCharCode(byte);
       }, "")
     )
+  );
+}
+
+export function sendMsg(command: string, value: string) {
+  ipcRenderer.sendSync(
+    "windows",
+    JSON.stringify({
+      command: command,
+      value: value,
+    })
   );
 }
