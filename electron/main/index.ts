@@ -1,7 +1,8 @@
-import { app, BrowserWindow, ipcMain, shell } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from "electron";
 import { release } from "node:os";
 import { join } from "node:path";
 
+import { fileTypeErr, urlTypeErr } from "./dialog";
 import { getUrlList } from "./get-url-list";
 import { printPDF } from "./printPDF";
 
@@ -28,7 +29,7 @@ if (!app.requestSingleInstanceLock()) {
 // process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 
 let win: BrowserWindow | null = null;
-// Here, you can also use other preload
+Menu.setApplicationMenu(null);
 const preload = join(__dirname, "../preload/index.js");
 const url = process.env.VITE_DEV_SERVER_URL;
 const indexHtml = join(process.env.DIST, "index.html");
@@ -133,20 +134,32 @@ app.on("ready", async () => {
   ipcMain.on("windows", async function (event, data) {
     const { command, value } = JSON.parse(data);
     switch (command) {
-      case "child_call_parent":
-        event.returnValue = "OK";
-        win.webContents.send("hello_child", "哈喽子级！");
-        break;
       case "PAGE_URL_LIST":
         event.returnValue = "OK";
-        page_URL_list = JSON.parse(value);
-        isPause = false;
-        await sendPDF(page_URL_list, true);
+        try {
+          const arr = JSON.parse(value);
+          if (!Array.isArray(arr)) {
+            await fileTypeErr();
+            win.webContents.send("SET_STATUS".toLowerCase(), 1);
+            break;
+          }
+          page_URL_list = JSON.parse(value);
+          isPause = false;
+          await sendPDF(page_URL_list, true);
+        } catch (e) {
+          await fileTypeErr();
+          win.webContents.send("SET_STATUS".toLowerCase(), 1);
+        }
         break;
       case "GET_URL_LIST":
         event.returnValue = "OK";
-        const url_list = await getUrlList(value);
-        win.webContents.send("GET_URL_LIST".toLowerCase(), url_list);
+        try {
+          const url_list = await getUrlList(value);
+          win.webContents.send("GET_URL_LIST".toLowerCase(), url_list);
+        } catch (e) {
+          await urlTypeErr();
+          win.webContents.send("SET_LOADING".toLowerCase(), false);
+        }
         break;
       case "PAUSE_GET_PDF":
         event.returnValue = "OK";

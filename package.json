@@ -1,9 +1,9 @@
 {
-  "name": "electron-vite-react",
+  "name": "tools",
   "version": "2.1.0",
   "main": "dist-electron/main/index.js",
   "description": "Electron Vite React boilerplate.",
-  "author": "草鞋没号 <308487730@qq.com>",
+  "author": "",
   "license": "MIT",
   "private": true,
   "debug": {
@@ -27,7 +27,7 @@
     "@vitejs/plugin-react": "^3.1.0",
     "electron": "^23.1.2",
     "electron-builder": "^23.6.0",
-    "eslint": "^8.15.0",
+    "eslint": "8.22.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-jsx-a11y": "^6.5.1",
