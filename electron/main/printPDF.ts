@@ -18,7 +18,10 @@ export async function printPDF(url: string) {
   });
   await sleep();
   const title = await page.title();
-  const pdf = await page.pdf({ format: "A4" });
+  const pdf = await page.pdf({
+    format: "A4",
+    printBackground: true,
+  });
   const img = await page.screenshot();
   await browser.close();
   return { title, pdf, img };
