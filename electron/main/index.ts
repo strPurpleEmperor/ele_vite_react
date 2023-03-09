@@ -172,6 +172,16 @@ app.on("ready", async () => {
         isPause = false;
         await sendPDF(page_URL_list, false);
         break;
+      case "GET_PDF":
+        event.returnValue = "OK";
+        let pdf: any = null;
+        try {
+          pdf = await printPDF(value);
+        } catch (e) {
+          await urlTypeErr();
+        }
+        win.webContents.send("GET_PDF".toLowerCase(), pdf);
+        break;
       default:
         event.returnValue = "OK";
         win.webContents.send("", "");

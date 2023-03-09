@@ -1,4 +1,7 @@
 import { ipcRenderer } from "electron";
+import FileSaver from "file-saver";
+
+import { PDFTYPE } from "@/types";
 
 export function download(url = "", fileName = "未知文件") {
   const a = document.createElement("a");
@@ -17,7 +20,8 @@ export function download(url = "", fileName = "未知文件") {
   document.body.removeChild(a);
 }
 
-export function buffer2Url(buffer: Uint8Array) {
+export function buffer2Url(buffer?: Uint8Array) {
+  if (!buffer) return;
   return (
     "data:image/png;base64," +
     window.btoa(
@@ -36,4 +40,12 @@ export function sendMsg(command: string, value: string) {
       value: value,
     })
   );
+}
+
+export function downLoadPDF(pdf: PDFTYPE | null) {
+  if (!pdf) return;
+  const file = new Blob([pdf.pdf], {
+    type: "application/pdf",
+  });
+  FileSaver.saveAs(file, `${pdf.title}.pdf`);
 }
