@@ -3,6 +3,7 @@ import "./App.scss";
 import { Layout, Menu } from "antd";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 
+import ToTop from "@/component/ToTop";
 import { router } from "@/router";
 function App() {
   return (
@@ -18,7 +19,15 @@ function App() {
           mode="vertical"
         ></Menu>
       </Layout.Sider>
-      <Layout.Content style={{ padding: 12, backgroundColor: "white" }}>
+      <Layout.Content
+        id="main"
+        style={{
+          scrollBehavior: "smooth",
+          padding: 12,
+          backgroundColor: "white",
+          overflow: "auto",
+        }}
+      >
         <Routes>
           {router.map((r) => (
             <Route key={r.path} path={r.path} element={r.element} />
@@ -26,6 +35,7 @@ function App() {
           <Route path="*" element={<Navigate to="/get-url-list" />} />
         </Routes>
       </Layout.Content>
+      <ToTop />
     </Layout>
   );
 }
