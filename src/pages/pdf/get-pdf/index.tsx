@@ -5,7 +5,7 @@ import { useIPC } from "@/hooks";
 import { buffer2Url, downLoadPDF, sendMsg } from "@/tools";
 import { PDFTYPE } from "@/types";
 const GET_PDF = "GET_PDF";
-function GetPDF() {
+function GetPDF(): JSX.Element {
   const [loading, setLoading] = useState(false);
   useIPC(GET_PDF, getPDFHandler, []);
   const [pdf, setPDF] = useState<PDFTYPE | null>(null);
