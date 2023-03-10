@@ -3,13 +3,18 @@ import "./index.scss";
 import { Button, Input, Spin } from "antd";
 import FileSaver from "file-saver";
 import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
+import { dispatchLoading } from "@/features/getUrlList/getUrlListSlice";
 import { useIPC } from "@/hooks";
 import { sendMsg } from "@/tools";
 const GET_URL_LIST = "GET_URL_LIST";
 const SET_LOADING = "SET_LOADING";
 function GetUrlList() {
-  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
+  const store = useSelector((state: any) => state.getUrlList);
+  const loading = store.loading;
+  const setLoading = (val: boolean) => dispatch(dispatchLoading(val));
   const [urlList, setUrlList] = useState<string[]>([]);
   useIPC(GET_URL_LIST, urlListHandler, []);
   useIPC(SET_LOADING, loadingHandler, []);
