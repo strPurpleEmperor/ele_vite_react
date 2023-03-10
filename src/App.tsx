@@ -1,22 +1,21 @@
 import "./App.scss";
 
-import { Layout, Menu } from "antd";
+import { Layout, Menu, Spin } from "antd";
+import { ItemType } from "antd/es/menu/hooks/useItems";
+import React, { Suspense } from "react";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 
 import ToTop from "@/component/ToTop";
-import { router } from "@/router";
+import { router, RouteType } from "@/router";
 function App() {
   return (
     <Layout style={{ height: "100%" }}>
       <Layout.Sider>
         <Menu
-          defaultSelectedKeys={["0"]}
-          items={router.map((r, index) => ({
-            title: r.name,
-            key: index.toString(),
-            label: <Link to={r.path}>{r.name}</Link>,
-          }))}
-          mode="vertical"
+          defaultOpenKeys={["/pdf"]}
+          defaultSelectedKeys={["/pdf/get-url-list"]}
+          items={menuItems(router)}
+          mode="inline"
         ></Menu>
       </Layout.Sider>
       <Layout.Content
@@ -29,10 +28,8 @@ function App() {
         }}
       >
         <Routes>
-          {router.map((r) => (
-            <Route key={r.path} path={r.path} element={r.element} />
-          ))}
-          <Route path="*" element={<Navigate to="/get-url-list" />} />
+          {rooterViews(router)}
+          <Route path="*" element={<Navigate to="/pdf/get-url-list" />}></Route>
         </Routes>
       </Layout.Content>
       <ToTop />
@@ -41,3 +38,36 @@ function App() {
 }
 
 export default App;
+function menuItems(routerItems?: RouteType[]): ItemType[] | undefined {
+  if (routerItems && routerItems.length) {
+    return routerItems.map((r) => {
+      return {
+        title: r.name,
+        key: r.path,
+        label: <Link to={r.path}>{r.name}</Link>,
+        children: menuItems(r.children),
+      };
+    });
+  }
+}
+function rooterViews(routerItems?: RouteType[]) {
+  if (routerItems && routerItems.length) {
+    return routerItems.map(({ path, children, Component }) => {
+      return (
+        <Route
+          path={path}
+          key={path}
+          element={
+            Component && (
+              <Suspense fallback={<Spin />}>
+                <Component />
+              </Suspense>
+            )
+          }
+        >
+          {rooterViews(children)}
+        </Route>
+      );
+    });
+  }
+}

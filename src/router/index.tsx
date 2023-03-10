@@ -1,28 +1,35 @@
 import React from "react";
 
-import GetPDF from "@/pages/get-pdf";
-import GetPDFList from "@/pages/get-pdf-list";
-import GetUrlList from "@/pages/get-url-list";
-
+import GetPDF from "@/pages/pdf/get-pdf";
+import GetPDFList from "@/pages/pdf/get-pdf-list";
+import GetUrlList from "@/pages/pdf/get-url-list";
 export interface RouteType {
   path: string;
-  element: React.ReactNode;
+  Component?: React.ElementType;
   name: string;
+  children?: RouteType[];
+  redirect?: string;
 }
 export const router: RouteType[] = [
   {
-    path: "/get-url-list",
-    element: <GetUrlList />,
-    name: "根据页面获取URL",
-  },
-  {
-    path: "/get-pdf-list",
-    element: <GetPDFList />,
-    name: "根据URL生成PDF",
-  },
-  {
-    path: "/get-pdf",
-    element: <GetPDF />,
-    name: "直接生成PDF",
+    path: "/pdf",
+    name: "PDF",
+    children: [
+      {
+        path: "/pdf/get-url-list",
+        Component: GetUrlList,
+        name: "根据页面获取URL",
+      },
+      {
+        path: "/pdf/get-pdf-list",
+        Component: GetPDFList,
+        name: "根据URL生成PDF",
+      },
+      {
+        path: "/pdf/get-pdf",
+        Component: GetPDF,
+        name: "直接生成PDF",
+      },
+    ],
   },
 ];
