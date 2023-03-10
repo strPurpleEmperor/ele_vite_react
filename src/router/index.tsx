@@ -13,7 +13,7 @@ export interface RouteType {
 export const router: RouteType[] = [
   {
     path: "/pdf",
-    name: "PDF",
+    name: "生成PDF",
     children: [
       {
         path: "/pdf/get-url-list",
