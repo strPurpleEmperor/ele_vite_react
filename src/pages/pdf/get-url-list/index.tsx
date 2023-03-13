@@ -1,21 +1,18 @@
 import "./index.scss";
 
-import { Button, Input, Spin } from "antd";
+import { Button, Input, message, Spin } from "antd";
 import FileSaver from "file-saver";
-import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import React from "react";
 
-import { dispatchLoading } from "@/features/getUrlList/getUrlListSlice";
 import { useIPC } from "@/hooks";
+import { useReduxValue } from "@/hooks/redux";
 import { sendMsg } from "@/tools";
 const GET_URL_LIST = "GET_URL_LIST";
 const SET_LOADING = "SET_LOADING";
+const NAME_SPACE = "getUrlList";
 function GetUrlList() {
-  const dispatch = useDispatch();
-  const store = useSelector((state: any) => state.getUrlList);
-  const loading = store.loading;
-  const setLoading = (val: boolean) => dispatch(dispatchLoading(val));
-  const [urlList, setUrlList] = useState<string[]>([]);
+  const [loading, setLoading] = useReduxValue(NAME_SPACE, "loading");
+  const [urlList, setUrlList] = useReduxValue(NAME_SPACE, "urlList");
   useIPC(GET_URL_LIST, urlListHandler, []);
   useIPC(SET_LOADING, loadingHandler, []);
   function getURL(url: string) {
@@ -29,7 +26,9 @@ function GetUrlList() {
     FileSaver.saveAs(blob, "url-list.txt");
   }
   function urlListHandler(_: any, data: string[]) {
-    setUrlList(data.filter((d: string) => /^http/.test(d)));
+    const val = data.filter((d: string) => /^http/.test(d));
+    if (!val.length) message.info("没有找到URL链接");
+    setUrlList(val);
     setLoading(false);
   }
   function loadingHandler(_: any, data: boolean) {

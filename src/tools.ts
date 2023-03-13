@@ -49,3 +49,7 @@ export function downLoadPDF(pdf: PDFTYPE | null) {
   });
   FileSaver.saveAs(file, `${pdf.title}.pdf`);
 }
+
+export function first2Up(name: string) {
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}

@@ -6,6 +6,7 @@ export const getUrlListSlice = createSlice({
   name: "getUrlList",
   initialState: {
     loading: false,
+    urlList: [],
   },
   reducers: {
     dispatchLoading: (state, action) => {
@@ -14,9 +15,13 @@ export const getUrlListSlice = createSlice({
         loading: action.payload,
       };
     },
+    dispatchUrlList: (state, action) => {
+      return {
+        ...state,
+        urlList: action.payload,
+      };
+    },
   },
 });
-// 每个 case reducer 函数会生成对应的 Action creators
 export const { dispatchLoading } = getUrlListSlice.actions;
-
 export default getUrlListSlice.reducer;
