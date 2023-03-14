@@ -32,9 +32,9 @@ export function buffer2Url(buffer?: Uint8Array) {
   );
 }
 
-export function sendMsg(command: string, value: string) {
+export function sendPDFMsg(command: string, value: string) {
   ipcRenderer.sendSync(
-    "windows",
+    "PDF_CHANNEL",
     JSON.stringify({
       command: command,
       value: value,

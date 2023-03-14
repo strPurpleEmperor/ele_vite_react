@@ -46,7 +46,7 @@ function GetPDFList() {
   useIPC(RETRY_GET_PDF, retryHandler, []);
   useEffect(() => {
     if (urlList.length) {
-      sendMsg(PAGE_URL_LIST, JSON.stringify(urlList));
+      sendPDFMsg(PAGE_URL_LIST, JSON.stringify(urlList));
       setStatus(2);
       setUrlList([]);
     }
@@ -83,7 +83,7 @@ function GetPDFList() {
       setStatus(2);
     }
   }
-  function sendMsg(command: string, value: any) {
+  function sendPDFMsg(command: string, value: any) {
     ipcRenderer.sendSync(
       "windows",
       JSON.stringify({
@@ -97,7 +97,7 @@ function GetPDFList() {
     reader.readAsText(fileList[0].originFileObj);
     reader.onload = function (e) {
       setStatus(2);
-      sendMsg(PAGE_URL_LIST, e?.target?.result as string);
+      sendPDFMsg(PAGE_URL_LIST, e?.target?.result as string);
     };
   }
   function fileChange(e: any) {
@@ -142,16 +142,16 @@ function GetPDFList() {
       });
   }
   function toPause() {
-    sendMsg(PAUSE_GET_PDF, "");
+    sendPDFMsg(PAUSE_GET_PDF, "");
   }
   function toStop() {
-    sendMsg(STOP_GET_PDF, "");
+    sendPDFMsg(STOP_GET_PDF, "");
   }
   function toContinue() {
-    sendMsg(CONTINUE_GET_PDF, "");
+    sendPDFMsg(CONTINUE_GET_PDF, "");
   }
   function toRetry(item: PDFTYPE, index: number) {
-    sendMsg(RETRY_GET_PDF, { url: item.url, index });
+    sendPDFMsg(RETRY_GET_PDF, { url: item.url, index });
     pdfList[index].loading = true;
     setPdfList([...pdfList]);
   }

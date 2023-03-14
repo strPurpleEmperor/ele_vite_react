@@ -2,9 +2,8 @@ import { app, BrowserWindow, ipcMain, Menu, shell } from "electron";
 import { release } from "node:os";
 import { join } from "node:path";
 
-import { fileTypeErr, urlTypeErr } from "./dialog";
-import { getUrlList } from "./get-url-list";
-import { printPDF } from "./printPDF";
+import { pdf } from "./pdf";
+import { rename } from "./rename";
 
 process.env.DIST_ELECTRON = join(__dirname, "../");
 process.env.DIST = join(process.env.DIST_ELECTRON, "../dist");
@@ -32,35 +31,15 @@ let win: BrowserWindow | null = null;
 const preload = join(__dirname, "../preload/index.js");
 const url = process.env.VITE_DEV_SERVER_URL;
 const indexHtml = join(process.env.DIST, "index.html");
-let page_URL_list: string[] = [];
-let isPause = false;
-async function sendPDF(urlList: string[], isNew: boolean) {
-  const url = urlList.shift();
-  const pdf = await printPDF(url);
-  if (isPause) {
-    urlList.unshift(url);
-  } else {
-    win.webContents.send("PAGE_URL_LIST".toLowerCase(), {
-      pdf,
-      isNew,
-      isFinish: page_URL_list.length === 0,
-    });
-  }
-  if (urlList.length && !isPause) {
-    await sendPDF(urlList, false);
-  }
-}
 async function createWindow() {
   win = new BrowserWindow({
     title: "Main window",
     icon: join(process.env.PUBLIC, "favicon.ico"),
     webPreferences: {
       preload,
-      // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
-      // Consider using contextBridge.exposeInMainWorld
-      // Read more on https://www.electronjs.org/docs/latest/tutorial/context-isolation
       nodeIntegration: true,
       contextIsolation: false,
+      webSecurity: false,
     },
     width: 1366,
     height: 800,
@@ -113,8 +92,6 @@ async function createWindow() {
   }
 }
 
-app.whenReady().then(createWindow);
-
 app.on("window-all-closed", () => {
   win = null;
   if (process.platform !== "darwin") app.quit();
@@ -156,71 +133,7 @@ ipcMain.handle("open-win", async (_, arg) => {
 });
 
 app.on("ready", async () => {
-  ipcMain.on("windows", async function (event, data) {
-    const { command, value } = JSON.parse(data);
-    switch (command) {
-      case "PAGE_URL_LIST":
-        event.returnValue = "OK";
-        try {
-          const arr = JSON.parse(value);
-          if (!Array.isArray(arr)) {
-            await fileTypeErr();
-            win.webContents.send("SET_STATUS".toLowerCase(), 1);
-            break;
-          }
-          page_URL_list = JSON.parse(value);
-          isPause = false;
-          await sendPDF(page_URL_list, true);
-        } catch (e) {
-          await fileTypeErr();
-          win.webContents.send("SET_STATUS".toLowerCase(), 1);
-        }
-        break;
-      case "GET_URL_LIST":
-        event.returnValue = "OK";
-        try {
-          const url_list = await getUrlList(value);
-          win.webContents.send("GET_URL_LIST".toLowerCase(), url_list);
-        } catch (e) {
-          await urlTypeErr();
-          win.webContents.send("SET_LOADING".toLowerCase(), false);
-        }
-        break;
-      case "PAUSE_GET_PDF":
-        event.returnValue = "OK";
-        isPause = true;
-        win.webContents.send("PAUSE_GET_PDF".toLowerCase(), true);
-        break;
-      case "CONTINUE_GET_PDF":
-        event.returnValue = "OK";
-        win.webContents.send("CONTINUE_GET_PDF".toLowerCase(), true);
-        isPause = false;
-        await sendPDF(page_URL_list, false);
-        break;
-      case "GET_PDF":
-        event.returnValue = "OK";
-        const pdf = await printPDF(value);
-        win.webContents.send("GET_PDF".toLowerCase(), pdf);
-        break;
-      case "STOP_GET_PDF":
-        event.returnValue = "OK";
-        isPause = true;
-        page_URL_list = [];
-        win.webContents.send("STOP_GET_PDF".toLowerCase(), true);
-        win.webContents.send("SET_LOADING".toLowerCase(), false);
-        win.webContents.send("SET_STATUS".toLowerCase(), 4);
-        break;
-      case "RETRY_GET_PDF": //重试
-        event.returnValue = "OK";
-        const retryPdf = await printPDF(value.url);
-        win.webContents.send("RETRY_GET_PDF".toLowerCase(), {
-          pdf: retryPdf,
-          index: value.index,
-        });
-        break;
-      default:
-        event.returnValue = "OK";
-        win.webContents.send("", "");
-    }
-  });
+  await createWindow();
+  pdf(ipcMain, win);
+  rename(ipcMain, win);
 });

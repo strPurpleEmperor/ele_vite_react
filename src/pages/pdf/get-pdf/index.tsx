@@ -4,7 +4,7 @@ import React from "react";
 
 import { loadingVal, pdfVal } from "@/atom/PDF/getPDF";
 import { useIPC } from "@/hooks";
-import { buffer2Url, downLoadPDF, sendMsg } from "@/tools";
+import { buffer2Url, downLoadPDF, sendPDFMsg } from "@/tools";
 import { PDFTYPE } from "@/types";
 const GET_PDF = "GET_PDF";
 function GetPDF(): JSX.Element {
@@ -12,12 +12,13 @@ function GetPDF(): JSX.Element {
   useIPC(GET_PDF, getPDFHandler, []);
   const [pdf, setPDF] = useAtom(pdfVal);
   function getPDFHandler(_: any, data: PDFTYPE) {
+    console.log(data);
     setPDF(data);
     setLoading(false);
   }
   function toGetPDF(val: string) {
     if (!val) return;
-    sendMsg(GET_PDF, val);
+    sendPDFMsg(GET_PDF, val);
     setLoading(true);
   }
   function toDown() {
@@ -36,7 +37,7 @@ function GetPDF(): JSX.Element {
         title="解析内容"
         style={{ marginTop: 20 }}
         extra={
-          pdf && (
+          pdf?.status && (
             <Button type="primary" onClick={toDown}>
               下载
             </Button>
@@ -44,7 +45,7 @@ function GetPDF(): JSX.Element {
         }
       >
         <Space direction="vertical">
-          <div>标题：{pdf?.title || "解析失败"}</div>
+          <div>标题：{pdf?.title || (pdf?.status === 0 && '"解析失败"')}</div>
           <div>
             预览：
             <Image src={buffer2Url(pdf?.img)} />

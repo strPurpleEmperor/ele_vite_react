@@ -15,7 +15,7 @@ import {
   urlValue,
 } from "@/atom/PDF/getUrlList";
 import { useIPC } from "@/hooks";
-import { sendMsg } from "@/tools";
+import { sendPDFMsg } from "@/tools";
 
 const SET_LOADING = "SET_LOADING";
 const GET_URL_LIST = "GET_URL_LIST";
@@ -37,7 +37,7 @@ function GetUrlList() {
   function getURL(url: string) {
     setUrl(url);
     if (!url) return;
-    sendMsg(GET_URL_LIST, url);
+    sendPDFMsg(GET_URL_LIST, url);
     setLoading(true);
   }
   function getUrl(o: any[], s: number[]) {
