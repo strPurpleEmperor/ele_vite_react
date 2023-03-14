@@ -32,9 +32,18 @@ export function buffer2Url(buffer?: Uint8Array) {
   );
 }
 
-export function sendPDFMsg(command: string, value: string) {
+export function sendPDFMsg(command: string, value: any) {
   ipcRenderer.sendSync(
     "PDF_CHANNEL",
+    JSON.stringify({
+      command: command,
+      value: value,
+    })
+  );
+}
+export function sendFileMsg(command: string, value: any) {
+  ipcRenderer.sendSync(
+    "FILE_CHANNEL",
     JSON.stringify({
       command: command,
       value: value,
@@ -54,4 +63,14 @@ export function saveAs(file: Blob | string, fileName: string) {
 }
 export function first2Up(name: string) {
   return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+export function getFileType(v: string): [string, string] {
+  const arr = v.split(".");
+
+  if (arr.length > 0) {
+    const suffix = arr[arr.length - 1] || "";
+    return [arr.join("."), "." + suffix];
+  }
+  return [v, ""];
 }

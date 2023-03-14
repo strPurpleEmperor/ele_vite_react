@@ -83,6 +83,11 @@ async function createWindow() {
         submenu: [
           { label: "Copy", accelerator: "CmdOrCtrl+C", selector: "copy:" },
           { label: "Paste", accelerator: "CmdOrCtrl+V", selector: "paste:" },
+          {
+            label: "SelectAll",
+            accelerator: "CmdOrCtrl+A",
+            selector: "selectAll:",
+          },
         ],
       },
     ];

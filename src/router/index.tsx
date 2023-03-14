@@ -1,5 +1,6 @@
 import React from "react";
 
+import Rename from "@/pages/file/rename";
 import GetPDF from "@/pages/pdf/get-pdf";
 import GetPDFList from "@/pages/pdf/get-pdf-list";
 import GetUrlList from "@/pages/pdf/get-url-list";
@@ -29,6 +30,17 @@ export const router: RouteType[] = [
         path: "/pdf/get-pdf",
         Component: GetPDF,
         name: "直接生成PDF",
+      },
+    ],
+  },
+  {
+    path: "/file",
+    name: "文件操作",
+    children: [
+      {
+        path: "/file/rename",
+        Component: Rename,
+        name: "批量重命名",
       },
     ],
   },
