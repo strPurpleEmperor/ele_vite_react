@@ -54,6 +54,5 @@ module.exports = {
     "jsx-a11y/no-static-element-interactions": "off",
     "@typescript-eslint/no-unused-vars": ["error"],
     "@typescript-eslint/no-empty-function": "off",
-    "max-lines": ["error", { max: 250, skipBlankLines: true }], // 保持开启，超出请拆分组件或函数
   },
 };

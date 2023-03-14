@@ -55,9 +55,9 @@
     "downloadjs": "^1.4.7",
     "electron-store": "^8.1.0",
     "file-saver": "^2.0.5",
+    "jotai": "^2.0.3",
     "jszip": "^3.10.1",
     "puppeteer": "^19.7.2",
-    "react-redux": "^8.0.5",
     "react-router-dom": "^6.8.2"
   }
 }

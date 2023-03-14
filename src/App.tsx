@@ -1,39 +1,59 @@
 import "./App.scss";
 
-import { Layout, Menu, Spin } from "antd";
+import { ConfigProvider, Layout, Menu, Spin } from "antd";
 import { ItemType } from "antd/es/menu/hooks/useItems";
+import zhCN from "antd/locale/zh_CN";
+import { useAtom } from "jotai";
 import React, { Suspense } from "react";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 
+import { openKeysVal, selectedKeysVal } from "@/atom/PDF";
 import ToTop from "@/component/ToTop";
 import { router, RouteType } from "@/router";
 function App() {
+  const [openKeys, setOpenKeys] = useAtom(openKeysVal);
+  const [selectedKeys, setSelectedKeys] = useAtom(selectedKeysVal);
+  function clickMenuHandler(info: any) {
+    const { key, keyPath } = info;
+    console.log(key, keyPath);
+    setSelectedKeys([key]);
+  }
+  function openChangeHandler(openKeys: string[]) {
+    setOpenKeys(openKeys);
+  }
   return (
-    <Layout style={{ height: "100%" }}>
-      <Layout.Sider>
-        <Menu
-          defaultOpenKeys={["/pdf"]}
-          defaultSelectedKeys={["/pdf/get-url-list"]}
-          items={menuItems(router)}
-          mode="inline"
-        ></Menu>
-      </Layout.Sider>
-      <Layout.Content
-        id="main"
-        style={{
-          scrollBehavior: "smooth",
-          padding: 12,
-          backgroundColor: "white",
-          overflow: "auto",
-        }}
-      >
-        <Routes>
-          {rooterViews(router)}
-          <Route path="*" element={<Navigate to="/pdf/get-url-list" />}></Route>
-        </Routes>
-      </Layout.Content>
-      <ToTop />
-    </Layout>
+    <ConfigProvider locale={zhCN}>
+      <Layout style={{ height: "100%" }}>
+        <Layout.Sider>
+          <Menu
+            openKeys={openKeys}
+            selectedKeys={selectedKeys}
+            items={menuItems(router)}
+            mode="inline"
+            onClick={clickMenuHandler}
+            onOpenChange={openChangeHandler}
+          ></Menu>
+        </Layout.Sider>
+        <Layout.Content
+          id="main"
+          style={{
+            scrollBehavior: "smooth",
+            padding: 12,
+            backgroundColor: "white",
+            overflow: "auto",
+          }}
+        >
+          <Routes>
+            {rooterViews(router)}
+            <Route
+              path="*"
+              element={<Navigate to="/pdf/get-url-list" />}
+            ></Route>
+          </Routes>
+        </Layout.Content>
+        <ToTop />
+      </Layout>
+    </ConfigProvider>
   );
 }
 

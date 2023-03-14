@@ -12,7 +12,10 @@ export async function getUrlList(url: string) {
   const url_list = await page.$$eval("a", async (els) => {
     const res = [];
     els.forEach((e) => {
-      res.push(e.href);
+      res.push({
+        url: e.href,
+        name: e.innerText,
+      });
     });
     return res;
   });

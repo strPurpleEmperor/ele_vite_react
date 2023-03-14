@@ -1,25 +1,45 @@
-import { CaretRightOutlined, PauseOutlined } from "@ant-design/icons";
-import { Button, Image, Space, Spin, Table, Upload } from "antd";
+import {
+  CaretRightOutlined,
+  PauseOutlined,
+  StopOutlined,
+} from "@ant-design/icons";
+import { Button, Image, Modal, Space, Spin, Table, Upload } from "antd";
 import { ipcRenderer } from "electron";
 import FileSaver from "file-saver";
+import { useAtom } from "jotai";
 import JSZip from "jszip";
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 
+import { getUrlListVal } from "@/atom/PDF";
+import {
+  fileListValue,
+  pdfListValue,
+  statusValue,
+} from "@/atom/PDF/getPDFList";
 import { useIPC } from "@/hooks";
 import { buffer2Url } from "@/tools";
 import { PDFTYPE } from "@/types";
 const PAGE_URL_LIST = "PAGE_URL_LIST";
 const PAUSE_GET_PDF = "PAUSE_GET_PDF";
+const STOP_GET_PDF = "STOP_GET_PDF";
 const CONTINUE_GET_PDF = "CONTINUE_GET_PDF";
 const SET_STATUS = "SET_STATUS";
 function GetPDFList() {
-  const [pdfList, setPdfList] = useState<PDFTYPE[]>([]);
-  const [fileList, setFileList] = useState<any[]>([]);
-  const [status, setStatus] = useState<0 | 1 | 2 | 3 | 4>(0); // 0没有文件，1有文件未开始，2进行中，3暂停,4完成
+  const [pdfList, setPdfList] = useAtom(pdfListValue);
+  const [fileList, setFileList] = useAtom(fileListValue);
+  const [urlList, setUrlList] = useAtom(getUrlListVal);
+  const [status, setStatus] = useAtom(statusValue); // 0没有文件，1有文件未开始，2进行中，3暂停,4完成
   useIPC(PAGE_URL_LIST, msgHandler, [pdfList]);
   useIPC(PAUSE_GET_PDF, pauseHandler, []);
   useIPC(CONTINUE_GET_PDF, contHandler, []);
   useIPC(SET_STATUS, statusHandler, []);
+  useEffect(() => {
+    if (urlList.length) {
+      sendMsg(PAGE_URL_LIST, JSON.stringify(urlList));
+      setStatus(2);
+      setUrlList([]);
+    }
+  }, []);
   function statusHandler(_: any, data: 0 | 1 | 2 | 3 | 4) {
     setStatus(data);
   }
@@ -66,16 +86,29 @@ function GetPDFList() {
     };
   }
   function fileChange(e: any) {
-    setFileList(e.fileList);
     if (e.fileList.length) {
-      setStatus(1);
+      if (status === 2) {
+        Modal.confirm({
+          content: "有正在进行中的任务，是否覆盖？",
+          onOk: () => {
+            toStop();
+            setStatus(1);
+            setFileList(e.fileList);
+          },
+        });
+      } else {
+        setStatus(1);
+        setFileList(e.fileList);
+      }
     } else {
       setStatus(0);
+      setFileList([]);
     }
   }
   function deletePDF(i: number) {
-    pdfList.splice(i, 1);
-    setPdfList([...pdfList]);
+    const v = [...pdfList];
+    v.splice(i, 1);
+    setPdfList(v);
   }
   function savePDF(p: PDFTYPE) {
     const file = new Blob([p.pdf], {
@@ -87,10 +120,12 @@ function GetPDFList() {
   function saveAllPDF() {
     const zip = new JSZip();
     const promises: Promise<any>[] = [];
-    pdfList.forEach((p) => {
-      const file = zip.file(`${p.title}.pdf`, p.pdf, { binary: true });
-      promises.push(Promise.resolve(file));
-    });
+    pdfList
+      .filter((p) => p.status)
+      .forEach((p) => {
+        const file = zip.file(`${p.title}.pdf`, p.pdf, { binary: true });
+        promises.push(Promise.resolve(file));
+      });
     const rename = new Date().toString();
     Promise.all(promises)
       .then(() => {
@@ -103,6 +138,9 @@ function GetPDFList() {
   }
   function toPause() {
     sendMsg(PAUSE_GET_PDF, "");
+  }
+  function toStop() {
+    sendMsg(STOP_GET_PDF, "");
   }
   function toContinue() {
     sendMsg(CONTINUE_GET_PDF, "");
@@ -138,9 +176,14 @@ function GetPDFList() {
               </Button>
             )}
             {status === 2 && (
-              <Button icon={<PauseOutlined />} danger onClick={toPause}>
-                暂停
-              </Button>
+              <Space>
+                <Button icon={<PauseOutlined />} danger onClick={toPause}>
+                  暂停
+                </Button>
+                <Button icon={<StopOutlined />} danger onClick={toStop}>
+                  停止
+                </Button>
+              </Space>
             )}
             {status === 3 && (
               <Button
@@ -169,13 +212,22 @@ function GetPDFList() {
             title: "名称",
             dataIndex: "title",
             key: "title",
+            render: (title: string) => title || "解析失败",
           },
           {
             title: "预览",
             dataIndex: "img",
             key: "img",
-            render: (img: Uint8Array) => {
-              return <Image width={100} src={buffer2Url(img)} />;
+            ellipsis: true,
+            render: (img: Uint8Array, { status, url }) => {
+              if (status)
+                return <Image width={100} height={100} src={buffer2Url(img)} />;
+              else
+                return (
+                  <a href={url} target="_blank" rel="noreferrer">
+                    {url}
+                  </a>
+                );
             },
           },
           {
@@ -184,16 +236,17 @@ function GetPDFList() {
             key: "pdf",
             width: 180,
             render: (pdf: Uint8Array, item: PDFTYPE, index: number) => {
-              return (
-                <Space>
-                  <Button danger onClick={() => deletePDF(index)}>
-                    删除
-                  </Button>
-                  <Button type="primary" onClick={() => savePDF(item)}>
-                    保存
-                  </Button>
-                </Space>
-              );
+              if (item.status)
+                return (
+                  <Space>
+                    <Button danger onClick={() => deletePDF(index)}>
+                      删除
+                    </Button>
+                    <Button type="primary" onClick={() => savePDF(item)}>
+                      保存
+                    </Button>
+                  </Space>
+                );
             },
           },
         ]}

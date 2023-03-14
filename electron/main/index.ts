@@ -29,7 +29,6 @@ if (!app.requestSingleInstanceLock()) {
 // process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 
 let win: BrowserWindow | null = null;
-Menu.setApplicationMenu(null);
 const preload = join(__dirname, "../preload/index.js");
 const url = process.env.VITE_DEV_SERVER_URL;
 const indexHtml = join(process.env.DIST, "index.html");
@@ -86,6 +85,32 @@ async function createWindow() {
     if (url.startsWith("https:")) shell.openExternal(url);
     return { action: "deny" };
   });
+  if (process.platform === "darwin") {
+    const template = [
+      {
+        label: "Application",
+        submenu: [
+          {
+            label: "Quit",
+            accelerator: "Command+Q",
+            click: function () {
+              app.quit();
+            },
+          },
+        ],
+      },
+      {
+        label: "Edit",
+        submenu: [
+          { label: "Copy", accelerator: "CmdOrCtrl+C", selector: "copy:" },
+          { label: "Paste", accelerator: "CmdOrCtrl+V", selector: "paste:" },
+        ],
+      },
+    ];
+    Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+  } else {
+    Menu.setApplicationMenu(null);
+  }
 }
 
 app.whenReady().then(createWindow);
@@ -174,13 +199,16 @@ app.on("ready", async () => {
         break;
       case "GET_PDF":
         event.returnValue = "OK";
-        let pdf: any = null;
-        try {
-          pdf = await printPDF(value);
-        } catch (e) {
-          await urlTypeErr();
-        }
+        const pdf = await printPDF(value);
         win.webContents.send("GET_PDF".toLowerCase(), pdf);
+        break;
+      case "STOP_GET_PDF":
+        event.returnValue = "OK";
+        isPause = true;
+        page_URL_list = [];
+        win.webContents.send("STOP_GET_PDF".toLowerCase(), true);
+        win.webContents.send("SET_LOADING".toLowerCase(), false);
+        win.webContents.send("SET_STATUS".toLowerCase(), 4);
         break;
       default:
         event.returnValue = "OK";

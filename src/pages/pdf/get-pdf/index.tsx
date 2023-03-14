@@ -1,14 +1,16 @@
 import { Button, Card, Image, Input, Space, Spin } from "antd";
-import React, { useState } from "react";
+import { useAtom } from "jotai";
+import React from "react";
 
+import { loadingVal, pdfVal } from "@/atom/PDF/getPDF";
 import { useIPC } from "@/hooks";
 import { buffer2Url, downLoadPDF, sendMsg } from "@/tools";
 import { PDFTYPE } from "@/types";
 const GET_PDF = "GET_PDF";
 function GetPDF(): JSX.Element {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useAtom(loadingVal);
   useIPC(GET_PDF, getPDFHandler, []);
-  const [pdf, setPDF] = useState<PDFTYPE | null>(null);
+  const [pdf, setPDF] = useAtom(pdfVal);
   function getPDFHandler(_: any, data: PDFTYPE) {
     setPDF(data);
     setLoading(false);
@@ -42,7 +44,7 @@ function GetPDF(): JSX.Element {
         }
       >
         <Space direction="vertical">
-          <div>标题：{pdf?.title}</div>
+          <div>标题：{pdf?.title || "解析失败"}</div>
           <div>
             预览：
             <Image src={buffer2Url(pdf?.img)} />

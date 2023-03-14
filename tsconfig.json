@@ -22,6 +22,6 @@
       ]
     },
   },
-  "include": ["src", "const"],
+  "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
