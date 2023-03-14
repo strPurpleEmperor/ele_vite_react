@@ -7,14 +7,27 @@ export function getChromePath() {
   return "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 }
 
-export function renameFiles(value: { path: string; newPath: string }[]) {
+export function renameFiles(
+  value: { path: string; newPath: string; newName: string }[]
+) {
   const pArr: Promise<any>[] = [];
-  value.forEach(({ path, newPath }) => {
+  value.forEach(({ path, newPath, newName }) => {
     pArr.push(
       new Promise((resolve) => {
         fs.rename(path, newPath, (e) => {
-          console.log(e);
-          resolve(1);
+          if (e === null) {
+            resolve({
+              status: 1,
+              newPath,
+              newName,
+            });
+          } else {
+            resolve({
+              status: 2,
+              newPath: "",
+              newName: "",
+            });
+          }
         });
       })
     );

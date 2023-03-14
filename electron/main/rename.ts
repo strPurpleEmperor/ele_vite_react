@@ -6,8 +6,8 @@ export function rename(ipcMain, win) {
     switch (command) {
       case "RENAME_FILES":
         event.returnValue = "OK";
-        await renameFiles(value);
-        win.webContents.send("RENAME_FILES".toLowerCase(), true);
+        const v = await renameFiles(value);
+        win.webContents.send("RENAME_FILES".toLowerCase(), v);
         break;
       default:
         event.returnValue = "OK";

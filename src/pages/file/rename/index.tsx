@@ -1,10 +1,19 @@
 import "./index.scss";
 
 import { InboxOutlined } from "@ant-design/icons";
-import { Button, Card, Input, message, Space, Upload, UploadProps } from "antd";
+import {
+  Button,
+  Card,
+  Input,
+  message,
+  notification,
+  Space,
+  Upload,
+  UploadProps,
+} from "antd";
 import { useAtom } from "jotai";
 import React, { useEffect } from "react";
-
+const colorMap = ["", "#52c41a", "#ff4d4f"];
 import { fileNameVal, renameVal } from "@/atom/file/rename";
 import { useIPC } from "@/hooks";
 import { getFileType, sendFileMsg } from "@/tools";
@@ -13,10 +22,30 @@ const RENAME_FILES = "RENAME_FILES";
 function Rename() {
   const [files, setFiles] = useAtom(fileNameVal);
   const [rename, setRename] = useAtom(renameVal);
-  useIPC(RENAME_FILES, renameFileHandler, []);
-  function renameFileHandler(_: any, data: any) {
-    console.log(data);
-    message.success("重命名成功");
+  useIPC(RENAME_FILES, renameFileHandler, [files]);
+  function renameFileHandler(
+    _: any,
+    data: { status: 1 | 2; newPath: string; newName: string }[]
+  ) {
+    let successCount = 0;
+    data.forEach((d, index) => {
+      if (d.status) {
+        successCount++;
+        files[index].status = d.status;
+        files[index].name = d.newName;
+        files[index].path = d.newPath;
+      }
+    });
+    setFiles([...files]);
+    notification.info({
+      message: (
+        <div>
+          <h4>操作结果：</h4>
+          <p style={{ color: "#52c41a" }}>成功{successCount}个</p>
+          <p style={{ color: "#ff4d4f" }}>失败{data.length - successCount}个</p>
+        </div>
+      ),
+    });
   }
   const props: UploadProps = {
     directory: true,
@@ -30,7 +59,10 @@ function Rename() {
             if (!f.rename) {
               const [oName, type] = getFileType(f.name);
               f.rename = oName;
+              f.name = oName;
               f.type = type;
+              f.status = 0; //0新文件、1成功、2失败
+              f.path = f.originFileObj.path;
             }
             _rename.push(f.rename);
             return f;
@@ -68,11 +100,12 @@ function Rename() {
     const value: any[] = [];
     files.forEach((f, index) => {
       value.push({
-        path: f.originFileObj.path,
-        newPath: f.originFileObj.path.replace(
+        path: f.path,
+        newPath: f.path.replace(
           `${f.name}${f.type}`,
           `${renames[index]}${f.type}`
         ),
+        newName: renames[index],
       });
     });
     sendFileMsg(RENAME_FILES, value);
@@ -85,7 +118,7 @@ function Rename() {
         </p>
         <p className="ant-upload-text">单击或拖动文件夹到此区域</p>
       </Dragger>
-      <Space>
+      <Space style={{ marginTop: 10, marginBottom: 10 }}>
         <Button onClick={clearWork}>清空</Button>
         <Button disabled={!rename} type="primary" onClick={toRename}>
           重命名
@@ -93,9 +126,11 @@ function Rename() {
       </Space>
       <div style={{ display: "flex" }}>
         <Card size="small" title="名称" style={{ flex: 1 }}>
-          <div style={{ paddingLeft: 10, paddingTop: 5 }}>
+          <div style={{ paddingLeft: 11, paddingTop: 4, paddingRight: 11 }}>
             {files.map((f, index) => (
-              <div key={index}>{f.name}</div>
+              <div key={index}>
+                <div style={{ color: colorMap[f.status] }}>{f.name}</div>
+              </div>
             ))}
           </div>
         </Card>

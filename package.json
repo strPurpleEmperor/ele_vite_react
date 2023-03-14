@@ -1,6 +1,6 @@
 {
   "name": "tools",
-  "version": "0.1.3",
+  "version": "0.1.5",
   "main": "dist-electron/main/index.js",
   "description": "Electron Vite React boilerplate.",
   "author": "",
