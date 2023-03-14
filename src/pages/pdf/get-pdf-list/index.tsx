@@ -3,7 +3,16 @@ import {
   PauseOutlined,
   StopOutlined,
 } from "@ant-design/icons";
-import { Button, Image, Modal, Space, Spin, Table, Upload } from "antd";
+import {
+  Button,
+  Image,
+  message,
+  Modal,
+  Space,
+  Spin,
+  Table,
+  Upload,
+} from "antd";
 import { ipcRenderer } from "electron";
 import FileSaver from "file-saver";
 import { useAtom } from "jotai";
@@ -23,6 +32,7 @@ const PAGE_URL_LIST = "PAGE_URL_LIST";
 const PAUSE_GET_PDF = "PAUSE_GET_PDF";
 const STOP_GET_PDF = "STOP_GET_PDF";
 const CONTINUE_GET_PDF = "CONTINUE_GET_PDF";
+const RETRY_GET_PDF = "RETRY_GET_PDF";
 const SET_STATUS = "SET_STATUS";
 function GetPDFList() {
   const [pdfList, setPdfList] = useAtom(pdfListValue);
@@ -33,6 +43,7 @@ function GetPDFList() {
   useIPC(PAUSE_GET_PDF, pauseHandler, []);
   useIPC(CONTINUE_GET_PDF, contHandler, []);
   useIPC(SET_STATUS, statusHandler, []);
+  useIPC(RETRY_GET_PDF, retryHandler, []);
   useEffect(() => {
     if (urlList.length) {
       sendMsg(PAGE_URL_LIST, JSON.stringify(urlList));
@@ -42,6 +53,10 @@ function GetPDFList() {
   }, []);
   function statusHandler(_: any, data: 0 | 1 | 2 | 3 | 4) {
     setStatus(data);
+  }
+  function retryHandler(_: any, data: { pdf: PDFTYPE; index: number }) {
+    pdfList[data.index] = data.pdf;
+    setPdfList([...pdfList]);
   }
   function msgHandler(
     _: any,
@@ -68,7 +83,7 @@ function GetPDFList() {
       setStatus(2);
     }
   }
-  function sendMsg(command: string, value: string) {
+  function sendMsg(command: string, value: any) {
     ipcRenderer.sendSync(
       "windows",
       JSON.stringify({
@@ -105,18 +120,6 @@ function GetPDFList() {
       setFileList([]);
     }
   }
-  function deletePDF(i: number) {
-    const v = [...pdfList];
-    v.splice(i, 1);
-    setPdfList(v);
-  }
-  function savePDF(p: PDFTYPE) {
-    const file = new Blob([p.pdf], {
-      type: "application/pdf",
-    });
-
-    FileSaver.saveAs(file, `${p.title}.pdf`);
-  }
   function saveAllPDF() {
     const zip = new JSZip();
     const promises: Promise<any>[] = [];
@@ -134,7 +137,9 @@ function GetPDFList() {
           FileSaver.saveAs(content, rename); // 利用file-saver保存文件  自定义文件名
         });
       })
-      .catch(() => {});
+      .catch(() => {
+        message.error("保存失败请重试");
+      });
   }
   function toPause() {
     sendMsg(PAUSE_GET_PDF, "");
@@ -144,6 +149,11 @@ function GetPDFList() {
   }
   function toContinue() {
     sendMsg(CONTINUE_GET_PDF, "");
+  }
+  function toRetry(item: PDFTYPE, index: number) {
+    sendMsg(RETRY_GET_PDF, { url: item.url, index });
+    pdfList[index].loading = true;
+    setPdfList([...pdfList]);
   }
   return (
     <>
@@ -236,17 +246,14 @@ function GetPDFList() {
             key: "pdf",
             width: 180,
             render: (pdf: Uint8Array, item: PDFTYPE, index: number) => {
-              if (item.status)
-                return (
-                  <Space>
-                    <Button danger onClick={() => deletePDF(index)}>
-                      删除
-                    </Button>
-                    <Button type="primary" onClick={() => savePDF(item)}>
-                      保存
-                    </Button>
-                  </Space>
-                );
+              return (
+                <Button
+                  loading={item.loading}
+                  onClick={() => toRetry(item, index)}
+                >
+                  重试
+                </Button>
+              );
             },
           },
         ]}

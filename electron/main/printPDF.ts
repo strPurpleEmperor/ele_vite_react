@@ -30,7 +30,7 @@ export async function printPDF(url: string) {
     const img = await page.screenshot();
     await autoScroll(page);
     await browser.close();
-    return { title, pdf, img, status: 1 };
+    return { title, pdf, img, status: 1, url };
   } catch (e) {
     console.log(e);
     return { status: 0, url, title: "" };

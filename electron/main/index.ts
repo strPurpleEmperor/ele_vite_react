@@ -210,6 +210,14 @@ app.on("ready", async () => {
         win.webContents.send("SET_LOADING".toLowerCase(), false);
         win.webContents.send("SET_STATUS".toLowerCase(), 4);
         break;
+      case "RETRY_GET_PDF": //重试
+        event.returnValue = "OK";
+        const retryPdf = await printPDF(value.url);
+        win.webContents.send("RETRY_GET_PDF".toLowerCase(), {
+          pdf: retryPdf,
+          index: value.index,
+        });
+        break;
       default:
         event.returnValue = "OK";
         win.webContents.send("", "");

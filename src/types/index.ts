@@ -4,4 +4,5 @@ export interface PDFTYPE {
   img: Uint8Array;
   status: 0 | 1;
   url?: string;
+  loading?: boolean;
 }
