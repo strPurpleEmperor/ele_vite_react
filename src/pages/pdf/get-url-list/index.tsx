@@ -6,7 +6,8 @@ import { useAtom, useSetAtom } from "jotai";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { getUrlListVal, selectedKeysVal } from "@/atom/PDF";
+import { selectedKeysVal } from "@/atom";
+import { getUrlListVal } from "@/atom/PDF";
 import {
   loadingValue,
   pageSizeValue,

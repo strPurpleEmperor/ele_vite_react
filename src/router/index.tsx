@@ -10,6 +10,7 @@ export interface RouteType {
   name: string;
   children?: RouteType[];
   redirect?: string;
+  icon?: React.ReactNode;
 }
 export const router: RouteType[] = [
   {
