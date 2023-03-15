@@ -12,16 +12,37 @@ import {
   UploadProps,
 } from "antd";
 import { useAtom } from "jotai";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 const colorMap = ["", "#52c41a", "#ff4d4f"];
 import { fileNameVal, renameVal } from "@/atom/file/rename";
 import { useIPC } from "@/hooks";
 import { getFileType, sendFileMsg } from "@/tools";
 const { Dragger } = Upload;
 const RENAME_FILES = "RENAME_FILES";
+let filesReducer: any[] = [];
 function Rename() {
   const [files, setFiles] = useAtom(fileNameVal);
   const [rename, setRename] = useAtom(renameVal);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (filesReducer.length) {
+        const _files: any[] = [];
+        const _renames: string[] = [];
+        filesReducer.forEach((f) => {
+          _files.push(f.file);
+          _renames.push(f.rename);
+        });
+        setFiles(files.concat(_files));
+        setRename(
+          (rename ? rename.split("\n") : []).concat(_renames).join("\n")
+        );
+        filesReducer = [];
+      }
+    }, 16);
+    return () => {
+      clearInterval(timer);
+    };
+  }, []);
   useIPC(RENAME_FILES, renameFileHandler, [files]);
   function renameFileHandler(
     _: any,
@@ -50,31 +71,19 @@ function Rename() {
   const props: UploadProps = {
     directory: true,
     onChange(info) {
-      console.log(info);
-      const { status } = info.file;
-      if (status !== "uploading") {
-        const _rename: string[] = [];
-        setFiles(
-          info.fileList.map((f: any) => {
-            if (!f.rename) {
-              const [oName, type] = getFileType(f.name);
-              f.rename = oName;
-              f.name = oName;
-              f.type = type;
-              f.status = 0; //0新文件、1成功、2失败
-              f.path = f.originFileObj.path;
-            }
-            _rename.push(f.rename);
-            return f;
-          })
-        );
-        setRename(_rename.join("\n"));
-      }
+      const f: Record<string, any> = info.file;
+      const [oName, type] = getFileType(f.name);
+      f.rename = oName;
+      f.name = oName;
+      f.type = type;
+      f.status = 0; //0新文件、1成功、2失败
+      f.path = f.originFileObj.path;
+      filesReducer.push({ file: f, rename: oName });
     },
     onDrop(e) {
       console.log("Dropped files", e.dataTransfer.files);
     },
-    beforeUpload: () => false,
+    customRequest: () => false,
     showUploadList: false,
     fileList: files,
   };
