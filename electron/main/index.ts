@@ -1,7 +1,8 @@
+import { enable, initialize } from "@electron/remote/main";
 import { app, BrowserWindow, ipcMain, Menu, shell } from "electron";
 import { release } from "node:os";
 import { join } from "node:path";
-
+initialize();
 import { pdf } from "./pdf";
 import { rename } from "./rename";
 
@@ -44,7 +45,7 @@ async function createWindow() {
     width: 1366,
     height: 800,
   });
-
+  enable(win.webContents);
   if (process.env.VITE_DEV_SERVER_URL) {
     // electron-vite-vue#298
     await win.loadURL(url);
@@ -64,37 +65,38 @@ async function createWindow() {
     if (url.startsWith("https:")) shell.openExternal(url);
     return { action: "deny" };
   });
-  if (process.platform === "darwin") {
-    const template = [
-      {
-        label: "Application",
-        submenu: [
-          {
-            label: "Quit",
-            accelerator: "Command+Q",
-            click: function () {
-              app.quit();
-            },
+  const template = [
+    {
+      label: "Application",
+      submenu: [
+        {
+          label: "Quit",
+          accelerator: "Command+Q",
+          click: function () {
+            app.quit();
           },
-        ],
-      },
-      {
-        label: "Edit",
-        submenu: [
-          { label: "Copy", accelerator: "CmdOrCtrl+C", selector: "copy:" },
-          { label: "Paste", accelerator: "CmdOrCtrl+V", selector: "paste:" },
-          {
-            label: "SelectAll",
-            accelerator: "CmdOrCtrl+A",
-            selector: "selectAll:",
-          },
-        ],
-      },
-    ];
-    Menu.setApplicationMenu(Menu.buildFromTemplate(template));
-  } else {
-    Menu.setApplicationMenu(null);
-  }
+        },
+      ],
+    },
+    {
+      label: "Edit",
+      submenu: [
+        { label: "复制", accelerator: "CmdOrCtrl+C", selector: "copy:" },
+        { label: "粘贴", accelerator: "CmdOrCtrl+V", selector: "paste:" },
+        {
+          label: "全选",
+          accelerator: "CmdOrCtrl+A",
+          selector: "selectAll:",
+        },
+        {
+          label: "撤回",
+          accelerator: "CmdOrCtrl+Z",
+          selector: "undo:",
+        },
+      ],
+    },
+  ];
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
 app.on("window-all-closed", () => {

@@ -13,7 +13,6 @@ import {
   Table,
   Upload,
 } from "antd";
-import { ipcRenderer } from "electron";
 import FileSaver from "file-saver";
 import { useAtom } from "jotai";
 import JSZip from "jszip";
@@ -26,7 +25,7 @@ import {
   statusValue,
 } from "@/atom/PDF/getPDFList";
 import { useIPC } from "@/hooks";
-import { buffer2Url } from "@/tools";
+import { buffer2Url, sendPDFMsg } from "@/tools";
 import { PDFTYPE } from "@/types";
 const PAGE_URL_LIST = "PAGE_URL_LIST";
 const PAUSE_GET_PDF = "PAUSE_GET_PDF";
@@ -82,15 +81,6 @@ function GetPDFList() {
     if (data) {
       setStatus(2);
     }
-  }
-  function sendPDFMsg(command: string, value: any) {
-    ipcRenderer.sendSync(
-      "windows",
-      JSON.stringify({
-        command: command,
-        value: value,
-      })
-    );
   }
   function toStart() {
     const reader = new FileReader();
@@ -205,7 +195,12 @@ function GetPDFList() {
               </Button>
             )}
           </div>
-          <Spin spinning={status === 2} />
+          {status === 2 && (
+            <div>
+              PDF 生成中，请稍后……
+              <Spin />
+            </div>
+          )}
         </div>
         {!status && <div />}
         <Button disabled={status !== 4 || !pdfList.length} onClick={saveAllPDF}>

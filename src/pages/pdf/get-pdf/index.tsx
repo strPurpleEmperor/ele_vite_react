@@ -25,7 +25,7 @@ function GetPDF(): JSX.Element {
     downLoadPDF(pdf);
   }
   return (
-    <Spin spinning={loading}>
+    <div>
       <div style={{ width: 500 }}>
         <Input.Search
           allowClear
@@ -33,14 +33,27 @@ function GetPDF(): JSX.Element {
           onSearch={toGetPDF}
         ></Input.Search>
       </div>
+      {loading && (
+        <div style={{ marginTop: 10 }}>
+          PDF 生成中，请稍后……
+          <Spin />
+        </div>
+      )}
       <Card
         title="解析内容"
         style={{ marginTop: 20 }}
         extra={
-          pdf?.status && (
-            <Button type="primary" onClick={toDown}>
-              下载
-            </Button>
+          pdf && (
+            <Space>
+              <Button danger onClick={() => setPDF(null)}>
+                清空
+              </Button>
+              {pdf?.status && (
+                <Button type="primary" onClick={toDown}>
+                  下载
+                </Button>
+              )}
+            </Space>
           )
         }
       >
@@ -52,7 +65,7 @@ function GetPDF(): JSX.Element {
           </div>
         </Space>
       </Card>
-    </Spin>
+    </div>
   );
 }
 export default GetPDF;

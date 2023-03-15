@@ -78,80 +78,90 @@ function GetUrlList() {
     setSelectedKeysVal(["/pdf/get-pdf-list"]);
   }
   return (
-    <Spin spinning={loading}>
-      <div className="content">
-        <Input.Search
-          className="input"
-          placeholder="输入URL地址"
-          onSearch={getURL}
-          enterButton="确认"
-          allowClear
-          value={url}
-          onInput={(v: any) => setUrl(v.target.value)}
-        />
-        <div style={{ marginTop: 10 }} />
-        {urlList.length > 0 && (
-          <Space direction="vertical">
+    <div className="content">
+      <Input.Search
+        className="input"
+        placeholder="输入网页地址"
+        onSearch={getURL}
+        enterButton="确认"
+        allowClear
+        value={url}
+        onInput={(v: any) => setUrl(v.target.value)}
+      />
+      {loading && (
+        <div>
+          URL 获取中，请稍后……
+          <Spin />
+        </div>
+      )}
+      <div style={{ marginTop: 10 }} />
+      {urlList.length > 0 && (
+        <Space direction="vertical">
+          <div>
             <Button onClick={toSelectAll} danger={selectAll}>
               {selectAll ? "取消" : "选择"}全部
             </Button>
-            <Table
-              scroll={{ y: 550 }}
-              rowSelection={{
-                type: "checkbox",
-                selectedRowKeys: selectUrl,
-                onChange: function (selectedRowKeys: any) {
-                  setSelectUrl(selectedRowKeys);
-                },
-              }}
-              rowKey={(item) => item.index}
-              columns={[
-                {
-                  title: "标题",
-                  dataIndex: "name",
-                  key: "name",
-                  ellipsis: true,
-                },
-                {
-                  title: "URL",
-                  dataIndex: "url",
-                  key: "url",
-                  ellipsis: true,
-                  render: (url: string) => (
-                    <a href={url} target="_blank" rel="noreferrer">
-                      {url}
-                    </a>
-                  ),
-                },
-              ]}
-              dataSource={urlList}
-              pagination={{
-                pageSize,
-                onChange: (_: any, size) => {
-                  setPageSize(size);
-                },
-              }}
-            />
-          </Space>
-        )}
-        {urlList.length > 0 && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              paddingBottom: 20,
-            }}
-          >
-            <Space>
-              <Button onClick={saveURL}>保存URL文件</Button>
-              <Button onClick={toGetAllPDF} type="primary">
-                批量下载PDF
-              </Button>
-            </Space>
+            <span style={{ marginLeft: 10 }}>提示：选择所有URL</span>
           </div>
-        )}
-      </div>
-    </Spin>
+          <Table
+            scroll={{ y: 550 }}
+            rowSelection={{
+              type: "checkbox",
+              selectedRowKeys: selectUrl,
+              onChange: function (selectedRowKeys: any) {
+                setSelectUrl(selectedRowKeys);
+              },
+            }}
+            rowKey={(item) => item.index}
+            columns={[
+              {
+                title: "←选择当前页全部",
+                dataIndex: "name",
+                key: "name",
+                ellipsis: true,
+              },
+              {
+                title: "URL",
+                dataIndex: "url",
+                key: "url",
+                ellipsis: true,
+                render: (url: string) => (
+                  <a href={url} target="_blank" rel="noreferrer">
+                    {url}
+                  </a>
+                ),
+              },
+            ]}
+            dataSource={urlList}
+            pagination={{
+              pageSize,
+              onChange: (_: any, size) => {
+                setPageSize(size);
+              },
+            }}
+          />
+        </Space>
+      )}
+      {urlList.length > 0 && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            paddingBottom: 20,
+          }}
+        >
+          <Space>
+            <Button danger onClick={() => setUrlList([])}>
+              清空
+            </Button>
+            <Button onClick={saveURL}>保存URL文件</Button>
+            <Button onClick={toGetAllPDF} type="primary">
+              将所选页面保存为 PDF
+            </Button>
+          </Space>
+        </div>
+      )}
+    </div>
   );
 }
 export default GetUrlList;

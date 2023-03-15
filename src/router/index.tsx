@@ -19,7 +19,7 @@ export const router: RouteType[] = [
       {
         path: "/pdf/get-url-list",
         Component: GetUrlList,
-        name: "根据页面获取URL",
+        name: "网页链接页面批量保存",
       },
       {
         path: "/pdf/get-pdf-list",
