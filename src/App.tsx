@@ -93,7 +93,6 @@ function menuItems(routerItems?: RouteType[]): ItemType[] | undefined {
   if (routerItems && routerItems.length) {
     return routerItems.map((r) => {
       return {
-        title: r.name,
         key: r.path,
         label: <Link to={r.path}>{r.name}</Link>,
         children: menuItems(r.children),
