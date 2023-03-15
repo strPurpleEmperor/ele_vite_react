@@ -1,5 +1,6 @@
 import React from "react";
 
+import Merge from "@/pages/file/merge";
 import Rename from "@/pages/file/rename";
 import GetPDF from "@/pages/pdf/get-pdf";
 import GetPDFList from "@/pages/pdf/get-pdf-list";
@@ -42,6 +43,11 @@ export const router: RouteType[] = [
         path: "/file/rename",
         Component: Rename,
         name: "批量重命名",
+      },
+      {
+        path: "/file/merge",
+        Component: Merge,
+        name: "批量生成Word",
       },
     ],
   },

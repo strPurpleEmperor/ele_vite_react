@@ -12,7 +12,7 @@ import {
   UploadProps,
 } from "antd";
 import { useAtom } from "jotai";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect } from "react";
 const colorMap = ["", "#52c41a", "#ff4d4f"];
 import { fileNameVal, renameVal } from "@/atom/file/rename";
 import { useIPC } from "@/hooks";
