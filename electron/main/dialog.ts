@@ -4,7 +4,8 @@ export function fileTypeErr() {
     type: "info",
     title: "提示信息",
     defaultId: 0,
-    message: '文件格式不符合要求!!!--格式：["url1","url2"]',
+    message:
+      '文件格式不符合要求!!!--格式：["url1","url2"]，或者网络异常，请重试',
     buttons: ["确定"],
   });
 }
@@ -14,7 +15,7 @@ export function urlTypeErr() {
     type: "info",
     title: "提示信息",
     defaultId: 0,
-    message: "非正确格式的url",
+    message: "链接不正确或者网络异常，请重试",
     buttons: ["确定"],
   });
 }

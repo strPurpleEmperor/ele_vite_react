@@ -154,7 +154,7 @@ function GetPDFList() {
           beforeUpload={() => false}
           onChange={fileChange}
         >
-          <Button type="primary">点击上传</Button>
+          <Button type="primary">上传URL文件</Button>
         </Upload>
       </div>
       <div

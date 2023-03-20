@@ -21,17 +21,17 @@ export const router: RouteType[] = [
       {
         path: "/pdf/get-url-list",
         Component: GetUrlList,
-        name: "网页链接页面批量保存",
+        name: "网页链接页批量保存",
       },
       {
         path: "/pdf/get-pdf-list",
         Component: GetPDFList,
-        name: "根据URL生成PDF",
+        name: "链接页批量读取",
       },
       {
         path: "/pdf/get-pdf",
         Component: GetPDF,
-        name: "直接生成PDF",
+        name: "单页生成PDF",
       },
     ],
   },
