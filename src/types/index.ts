@@ -6,3 +6,7 @@ export interface PDFTYPE {
   url?: string;
   loading?: boolean;
 }
+export interface Rule {
+  rule: (arg: any) => any;
+  ruleName: string;
+}

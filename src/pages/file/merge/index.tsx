@@ -1,50 +1,83 @@
 import "./index.scss";
 
 import { InboxOutlined } from "@ant-design/icons";
-import { Button, Card, Image, Input, Space, Upload } from "antd";
-import Templatemode from "docxtemplater";
+import {
+  Button,
+  Card,
+  Form,
+  Image,
+  Input,
+  message,
+  Modal,
+  Select,
+  Space,
+  Upload,
+} from "antd";
+import { createReport } from "docx-templates";
 import FileSaver from "file-saver";
 import JSZip from "jszip";
 import xlsx from "node-xlsx";
-import PizZip from "pizzip";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import mergeDemo from "@/assets/merge_demo.png";
-import { getFileType } from "@/tools";
+import { getFileType, RULES } from "@/tools";
+import { Rule } from "@/types";
+
+interface FormatRule extends Rule {
+  name: string;
+}
+
 function Merge() {
+  const [modalForm] = Form.useForm();
   const [word, setWord] = useState<ArrayBuffer>(new ArrayBuffer(0));
   const [excel, setExcel] = useState<any[]>([]);
   const [fileName, setFileName] = useState<string>("");
-
+  const [keys, setKeys] = useState<string[]>([]);
+  const [secureKeys, setSegueKeys] = useState<string[]>([]);
+  const [formatRule, setFormatRule] = useState<FormatRule[]>([]);
+  useEffect(() => {
+    const excelData = JSON.parse(
+      JSON.stringify(excel.length ? (excel[0].data as any) : [])
+    );
+    const keys: string[] = excelData.shift() || [];
+    setKeys(keys);
+  }, [excel]);
+  useEffect(() => {
+    setSegueKeys(keys.filter((k) => !formatRule.find((f) => f.name === k)));
+  }, [keys, formatRule]);
   function mergeFile() {
+    if (!excel.length || !word) return message.info("请先上传文件");
     const jsZip = new JSZip();
     const excelData = JSON.parse(JSON.stringify(excel[0].data || []));
     const keys: string[] = excelData.shift();
     const values: any[][] = excelData;
     const p: any[] = [];
     const nameMap: Record<string, number> = {};
+    const formatMap: Record<string, any> = {};
+    formatRule.forEach((f) => {
+      formatMap[f.name] = f.rule;
+    });
     values.forEach((v) => {
-      const zip = new PizZip(word);
-      const doc = new Templatemode(zip);
       const data: Record<string, any> = {};
       keys.forEach((k, index) => {
-        data[k] = v[index] || 0;
+        const val = v[index];
+        data[k] = formatMap[k] ? formatMap[k].rule(val) : val;
       });
-      doc.setData(data);
-      doc.render();
-      console.log(data);
+      const buf = createReport({
+        template: Buffer.from(word),
+        cmdDelimiter: ["{", "}"],
+        data,
+      });
       let name = fileName.replace(/{([\W\w]+)}/g, function (match, $1) {
         return data[$1];
       });
       if (nameMap[name] !== void 0) {
         nameMap[name]++;
         const [oName, fileType] = getFileType(name);
-        name = oName + `(${nameMap[name]})` + fileType;
+        name = `${oName}(${nameMap[name]})${fileType}`;
       } else {
         nameMap[name] = 0;
       }
-      console.log(nameMap);
-      const buf = doc.getZip()?.generate({ type: "blob" }) as Blob;
       p.push({ buf, name });
     });
     p.forEach((p) => {
@@ -56,6 +89,49 @@ function Merge() {
     jsZip.generateAsync({ type: "blob" }).then((content) => {
       // 生成二进制流
       FileSaver.saveAs(content, rename); // 利用file-saver保存文件  自定义文件名
+    });
+  }
+  function addRule() {
+    Modal.confirm({
+      icon: null,
+      title: "配置",
+      content: (
+        <Form form={modalForm}>
+          <Form.Item
+            label="标题"
+            name="name"
+            rules={[{ required: true, message: "请选择标题" }]}
+          >
+            <Select>
+              {secureKeys.map((s) => (
+                <Select.Option key={s}>{s}</Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item
+            label="格式化配置"
+            name="ruleName"
+            rules={[{ required: true, message: "请选择格式化内容" }]}
+          >
+            <Select>
+              {RULES.map((s) => (
+                <Select.Option key={s.ruleName}>{s.ruleName}</Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+        </Form>
+      ),
+      onOk: () => {
+        return modalForm.validateFields().then((res) => {
+          const _f = [...formatRule];
+          _f.push({
+            name: res.name,
+            ruleName: res.ruleName,
+            rule: RULES.find((r) => r.ruleName === res.ruleName) as any,
+          });
+          setFormatRule(_f);
+        });
+      },
     });
   }
   return (
@@ -104,13 +180,24 @@ function Merge() {
           <p className="ant-upload-text">上传或者拖拽Excel数据</p>
         </Upload.Dragger>
       </div>
+      <Card title="格式化配置">
+        {formatRule.map((f) => {
+          return (
+            <p key={f.name}>
+              <span style={{ fontWeight: "bold" }}>{f.name}：</span>
+              <span>{f.ruleName}</span>
+            </p>
+          );
+        })}
+        <Button onClick={addRule} type="primary">
+          +
+        </Button>
+      </Card>
+      <p></p>
       <Card
         title="文件名替换规则"
-        size="small"
         extra={
           <Space>
-            <Button>获取当前Word文件名</Button>
-            <Button>清除</Button>
             <Button onClick={mergeFile} type="primary">
               生成文件
             </Button>
@@ -124,7 +211,7 @@ function Merge() {
         />
       </Card>
       <p></p>
-      <Card title="替换规则说明" size="small">
+      <Card title="替换规则说明">
         <Image src={mergeDemo} />
         <p style={{ fontWeight: "bold", fontSize: 18 }}>说明：</p>
         <p>
@@ -135,9 +222,20 @@ function Merge() {
         <p>条件判断：</p>
         <p>
           {
-            '{#条件}条件符合会展示的东西{/}。"{#条件}"是条件开始；"{/}"是条件结束'
+            '{IF 条件}条件符合会展示的东西{END-IF}。"{IF 条件}"是条件开始(IF和条件之间要有一个空格)；"{END-IF}"是条件结束'
           }
         </p>
+        <p>条件判断--并且：</p>
+        <p>
+          {
+            '{IF 条件1 && 条件2 && 条件3}条件符合会展示的东西{END-IF}。"&&"是and，并且的意思，满足所有条件'
+          }
+        </p>
+        <p>其他条件判断：</p>
+        <p>{"条件1||条件2 -> 条件1或者条件2"}</p>
+        <p>{"!条件 -> 非该条件"}</p>
+        <p>{"条件 > 10 -> 条件大于10的时候"}</p>
+        <p>{"条件 >= 10 -> 条件大于10的时候"}</p>
       </Card>
     </div>
   );
