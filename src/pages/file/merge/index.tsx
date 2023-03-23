@@ -26,13 +26,13 @@ function Merge() {
     values.forEach((v) => {
       const zip = new PizZip(word);
       const doc = new Templatemode(zip);
+      console.log(doc);
       const data: Record<string, any> = {};
       keys.forEach((k, index) => {
         data[k] = v[index] || 0;
       });
       doc.setData(data);
       doc.render();
-      console.log(data);
       let name = fileName.replace(/{([\W\w]+)}/g, function (match, $1) {
         return data[$1];
       });
