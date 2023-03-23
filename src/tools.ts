@@ -1,7 +1,8 @@
+import dayjs from "dayjs";
 import { ipcRenderer } from "electron";
 import FileSaver from "file-saver";
 
-import { PDFTYPE } from "@/types";
+import { PDFTYPE, Rule } from "@/types";
 
 export function download(url = "", fileName = "未知文件") {
   const a = document.createElement("a");
@@ -75,3 +76,55 @@ export function getFileType(v: string): [string, string] {
   }
   return [v, ""];
 }
+
+export const RULES: Rule[] = [
+  {
+    ruleName: "保留整数",
+    rule: (val: number) => {
+      if (val) return val.toFixed(0);
+      return val;
+    },
+  },
+  {
+    ruleName: "保留一位小数",
+    rule: (val: number) => {
+      if (val) return val.toFixed(1);
+      return val;
+    },
+  },
+  {
+    ruleName: "保留两位小数",
+    rule: (val: number) => {
+      if (val) return val.toFixed(2);
+      return val;
+    },
+  },
+  {
+    ruleName: "日期：2023/03/01",
+    rule: (val: string) => {
+      if (val) return dayjs(val)?.format("YYYY/MM/DD");
+      return val;
+    },
+  },
+  {
+    ruleName: "日期：2023-03-01",
+    rule: (val: string) => {
+      if (val) return dayjs(val)?.format("YYYY-MM-DD");
+      return val;
+    },
+  },
+  {
+    ruleName: "日期：2023/03/01 13:30",
+    rule: (val: string) => {
+      if (val) return dayjs(val)?.format("YYYY/MM/DD HH:mm");
+      return val;
+    },
+  },
+  {
+    ruleName: "日期：2023-03-01 13:30",
+    rule: (val: string) => {
+      if (val) return dayjs(val)?.format("YYYY-MM-DD HH:mm");
+      return val;
+    },
+  },
+];
