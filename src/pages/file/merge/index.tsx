@@ -1,6 +1,6 @@
 import "./index.scss";
 
-import { InboxOutlined } from "@ant-design/icons";
+import { DeleteOutlined, InboxOutlined } from "@ant-design/icons";
 import {
   Button,
   Card,
@@ -134,6 +134,11 @@ function Merge() {
       },
     });
   }
+  function deleteRule(i: number) {
+    const f = [...formatRule];
+    f.splice(i, 1);
+    setFormatRule(f);
+  }
   return (
     <div className="merge">
       <div className="merge_wrap">
@@ -181,11 +186,17 @@ function Merge() {
         </Upload.Dragger>
       </div>
       <Card title="格式化配置">
-        {formatRule.map((f) => {
+        {formatRule.map((f, index) => {
           return (
             <p key={f.name}>
               <span style={{ fontWeight: "bold" }}>{f.name}：</span>
-              <span>{f.ruleName}</span>
+              <span style={{ marginRight: 10 }}>{f.ruleName}</span>
+              <Button
+                onClick={() => deleteRule(index)}
+                size="small"
+                icon={<DeleteOutlined />}
+                type="primary"
+              />
             </p>
           );
         })}
